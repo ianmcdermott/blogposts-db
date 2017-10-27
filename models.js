@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
-const blogpostSchema = mongoose.Schema({
+const blogPostSchema = mongoose.Schema({
 	title: {type: String, required: true},
 	content: {type: String, required: true},
 	author: {
 		firstName: {type: String, required: true},
 		lastName: {type: String, required: true}
 	}
-	created: {type: Date, required: true}
+	created: {type: Date, default: Date.now}
 })
 
 blogpostSchema.virtual('authorName').get(function(){

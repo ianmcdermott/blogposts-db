@@ -1,24 +1,23 @@
 const bodyParser = require('body-parser');
 const express = require('express');
 const mongoose = require('mongoose');
-
-mongoose.Promise = global.Promise;
+const morgan = require('morgan')
 
 const {DATABASE_URL, PORT} = require('./config');
 const {Blogpost} = require('./models');
 
 const app = express();
 app.use(bodyParser.json());
+app.use(morgan('common'));
+mongoose.Promise = global.Promise;
 
 app.get('/blogposts', (req,res) =>{
 	Blogpost
 	  .find()
-	  .limit(10)
 	  .then(blogposts =>{
 	  	res.json({
-	  		blogposts: blogposts.map(
-	  			(blogpost) => blogpost.apiRepr())
-	  	});
+	  		blogposts.map(blogpost => blogpost.apiRepr())
+	  	})
 	  })
 	  .catch(
 	  	err => {
@@ -56,12 +55,11 @@ app.post('/blogposts', (req, res) =>{
 			title: req.body.title,
 			content: req.body.content,
 			author: req.body.author,
-			created: req.body.created
 		})
 		.then(
 			blogpost => res.status(201).json(blogpost.apiRepr()))
 		.catch(err =>{
-			console.log(err);
+			console.error(err);
 			res.status(500).json({message: "Internal server error"});
 		});
 
@@ -85,7 +83,7 @@ app.put('/blogposts/:id', (req, res)=>{
 	});
 
 	Blogpost
-		.findByIdAndUpdate(req.params.id, {$set: toUpdate})
+		.findByIdAndUpdate(req.params.id, {$set: toUpdate}, {new:true})
 		.then(blogpost => res.status(204).end())
 		.catch(err => res.status(500).json({message: 'Internal server error'}))
 });
@@ -94,7 +92,7 @@ app.delete('/blogposts/:id', (req, res)=>{
 	Blogpost
 		.findByIdAndRemove(req.params.id)
 		.then(blogpost => res.status(204).end())
-		.catch(err => res.status(500).jeson({message: 'Internal server error'}));
+		.catch(err => res.status(500).json({error: 'Internal server error'}));
 });
 
 app.use('*', (req, res) => {
